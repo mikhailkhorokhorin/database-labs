@@ -1,0 +1,23 @@
+{
+  "editor.formatOnSave": false,
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "sqltools.connections": [
+    {
+      "name": "local",
+      "driver": "PostgreSQL",
+      "server": "localhost",
+      "port": 5432,
+      "database": "postgres",
+      "username": "postgres",
+      "password": ""
+    }
+  ],
+  "[markdown]": {
+    "editor.defaultFormatter": "davidanson.vscode-markdownlint"
+  },
+  "markdownlint.config": {
+    "extends": "${workspaceFolder}/.config/.markdownlint.yaml"
+  }
+}

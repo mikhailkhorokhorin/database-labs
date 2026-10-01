@@ -1,0 +1,20 @@
+{
+  "name": "PostgreSQL Labs",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "vscode",
+  "forwardPorts": [5432],
+  "postStartCommand": "make db-start",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "editorconfig.editorconfig",
+        "davidanson.vscode-markdownlint",
+        "bierner.markdown-mermaid"
+      ]
+    }
+  }
+}

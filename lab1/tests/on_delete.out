@@ -1,0 +1,45 @@
+SELECT
+    (SELECT count(*) FROM rental) AS rentals,
+    (SELECT count(*) FROM payment) AS payments;
+ rentals | payments 
+---------+----------
+      16 |       12
+(1 row)
+
+DELETE FROM rental
+WHERE rental_id = 2;
+DELETE 1
+SELECT
+    (SELECT count(*) FROM rental) AS rentals,
+    (SELECT count(*) FROM payment) AS payments;
+ rentals | payments 
+---------+----------
+      15 |       11
+(1 row)
+
+DELETE FROM rental
+WHERE rental_id = 7;
+psql:on_delete.sql:13: ERROR:  update or delete on table "rental" violates foreign key constraint "fine_rental_fkey" on table "fine"
+DETAIL:  Key (rental_id)=(7) is still referenced from table "fine".
+DELETE FROM customer
+WHERE customer_id = 8;
+DELETE 1
+DELETE FROM customer
+WHERE customer_id = 6;
+psql:on_delete.sql:19: ERROR:  update or delete on table "customer" violates foreign key constraint "rental_customer_fkey" on table "rental"
+DETAIL:  Key (customer_id)=(6) is still referenced from table "rental".
+DELETE FROM car
+WHERE car_id = 6;
+DELETE 1
+DELETE FROM car
+WHERE car_id = 1;
+psql:on_delete.sql:25: ERROR:  update or delete on table "car" violates foreign key constraint "rental_car_fkey" on table "rental"
+DETAIL:  Key (car_id)=(1) is still referenced from table "rental".
+DELETE FROM car_model
+WHERE model_id = 2;
+psql:on_delete.sql:28: ERROR:  update or delete on table "car_model" violates foreign key constraint "car_model_fkey" on table "car"
+DETAIL:  Key (model_id)=(2) is still referenced from table "car".
+DELETE FROM tariff
+WHERE tariff_id = 1;
+psql:on_delete.sql:31: ERROR:  update or delete on table "tariff" violates foreign key constraint "car_model_tariff_fkey" on table "car_model"
+DETAIL:  Key (tariff_id)=(1) is still referenced from table "car_model".

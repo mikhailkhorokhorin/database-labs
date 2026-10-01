@@ -1,0 +1,63 @@
+\set VERBOSITY terse
+\ir ../constraints_test.sql
+INSERT INTO customer (full_name, email, phone, birth_date, license_number, license_issued_on)
+VALUES (NULL, 'kirill.orlov@example.com', '+79161234511', '1996-06-01', '7711123411', '2015-08-10');
+psql:../constraints_test.sql:2: ERROR:  null value in column "full_name" of relation "customer" violates not-null constraint
+INSERT INTO customer (full_name, email, phone, birth_date, license_number, license_issued_on)
+VALUES (
+    'Anna Smirnova', 'anna.smirnova@example.com', '+79161234512', '1995-04-12', '7712123412',
+    '2014-06-20'
+);
+psql:../constraints_test.sql:8: ERROR:  duplicate key value violates unique constraint "customer_email_key"
+INSERT INTO customer (full_name, email, phone, birth_date, license_number, license_issued_on)
+VALUES ('Kirill Orlov', 'kirill.orlov', '+79161234511', '1996-06-01', '7711123411', '2015-08-10');
+psql:../constraints_test.sql:11: ERROR:  new row for relation "customer" violates check constraint "customer_email_check"
+INSERT INTO customer (full_name, email, phone, birth_date, license_number, license_issued_on)
+VALUES (
+    'Kirill Orlov', 'kirill.orlov@example.com', '+79161234511', '2009-06-01', '7711123411',
+    '2025-08-10'
+);
+psql:../constraints_test.sql:17: ERROR:  new row for relation "customer" violates check constraint "customer_license_age_check"
+INSERT INTO tariff (name, price_per_minute)
+VALUES ('Night Saver', 0.00);
+psql:../constraints_test.sql:20: ERROR:  new row for relation "tariff" violates check constraint "tariff_price_per_minute_check"
+INSERT INTO car_model (brand, model, car_class, seats, tariff_id)
+VALUES ('Kia', 'Rio', 'economy', 5, 1);
+psql:../constraints_test.sql:23: ERROR:  duplicate key value violates unique constraint "car_model_brand_model_key"
+INSERT INTO car (model_id, plate_number, vin, color, manufacture_year)
+VALUES (1, 'A101AA777', 'Z94K241CBRR000111', 'white', 2025);
+psql:../constraints_test.sql:26: ERROR:  duplicate key value violates unique constraint "car_plate_number_key"
+INSERT INTO car (model_id, plate_number, vin, color, manufacture_year)
+VALUES (1, 'B111BB777', 'Z94K241CBRR0001', 'white', 2025);
+psql:../constraints_test.sql:29: ERROR:  new row for relation "car" violates check constraint "car_vin_check"
+UPDATE car
+SET fuel_percent = 120
+WHERE car_id = 5;
+psql:../constraints_test.sql:33: ERROR:  new row for relation "car" violates check constraint "car_fuel_check"
+UPDATE car
+SET status = 'broken'
+WHERE car_id = 1;
+psql:../constraints_test.sql:37: ERROR:  new row for relation "car" violates check constraint "car_status_check"
+INSERT INTO rental (customer_id, car_id, tariff_id, status, started_at, ended_at, start_mileage_km)
+VALUES (2, 1, 1, 'completed', '2026-09-27 12:00+03', '2026-09-27 11:00+03', 48210);
+psql:../constraints_test.sql:40: ERROR:  new row for relation "rental" violates check constraint "rental_period_check"
+UPDATE rental
+SET status = 'completed', ended_at = '2026-09-27 11:00+03', end_mileage_km = 12000
+WHERE rental_id = 16;
+psql:../constraints_test.sql:44: ERROR:  new row for relation "rental" violates check constraint "rental_mileage_check"
+UPDATE rental
+SET status = 'completed', end_mileage_km = 30420
+WHERE rental_id = 15;
+psql:../constraints_test.sql:48: ERROR:  new row for relation "rental" violates check constraint "rental_end_check"
+INSERT INTO rental (customer_id, car_id, tariff_id, started_at, start_mileage_km)
+VALUES (2, 99, 1, '2026-09-27 12:00+03', 0);
+psql:../constraints_test.sql:51: ERROR:  insert or update on table "rental" violates foreign key constraint "rental_car_fkey"
+INSERT INTO payment (rental_id, amount, method)
+VALUES (14, -436.00, 'card');
+psql:../constraints_test.sql:54: ERROR:  new row for relation "payment" violates check constraint "payment_amount_check"
+INSERT INTO payment (rental_id, amount, method)
+VALUES (14, 436.00, 'cash');
+psql:../constraints_test.sql:57: ERROR:  new row for relation "payment" violates check constraint "payment_method_check"
+DELETE FROM customer
+WHERE customer_id = 6;
+psql:../constraints_test.sql:60: ERROR:  update or delete on table "customer" violates foreign key constraint "rental_customer_fkey" on table "rental"

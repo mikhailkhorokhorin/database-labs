@@ -1,0 +1,109 @@
+SET TIME ZONE 'Europe/Moscow';
+SET
+SELECT
+    m.car_class,
+    c.status,
+    count(*) AS cars
+FROM car AS c
+JOIN car_model AS m ON c.model_id = m.model_id
+GROUP BY m.car_class, c.status
+ORDER BY m.car_class, c.status;
+ car_class |     status     | cars 
+-----------+----------------+------
+ business  | available      |    1
+ comfort   | available      |    2
+ economy   | available      |    4
+ economy   | decommissioned |    1
+ economy   | maintenance    |    1
+ minivan   | available      |    1
+(6 rows)
+
+SELECT
+    r.rental_id,
+    cu.full_name,
+    m.brand || ' ' || m.model AS car,
+    t.name AS tariff,
+    (extract(EPOCH FROM r.ended_at - r.started_at) / 60)::integer AS minutes,
+    r.end_mileage_km - r.start_mileage_km AS km,
+    round(
+        extract(EPOCH FROM r.ended_at - r.started_at) / 60 * t.price_per_minute
+        + (r.end_mileage_km - r.start_mileage_km) * t.price_per_km,
+        2
+    ) AS cost,
+    coalesce(sum(p.amount), 0) AS paid
+FROM rental AS r
+JOIN customer AS cu ON r.customer_id = cu.customer_id
+JOIN car AS c ON r.car_id = c.car_id
+JOIN car_model AS m ON c.model_id = m.model_id
+JOIN tariff AS t ON r.tariff_id = t.tariff_id
+LEFT JOIN payment AS p ON r.rental_id = p.rental_id
+WHERE r.status = 'completed'
+GROUP BY r.rental_id, cu.full_name, m.brand, m.model, t.name, t.price_per_minute, t.price_per_km
+ORDER BY r.rental_id;
+ rental_id |    full_name     |          car          |    tariff     | minutes | km  |  cost   |  paid   
+-----------+------------------+-----------------------+---------------+---------+-----+---------+---------
+         1 | Irina Volkova    | Toyota Camry          | Business      |     105 |  75 | 2580.00 | 2580.00
+         2 | Daria Kuznetsova | Hyundai Solaris       | Welcome Promo |      38 |  17 |  224.20 |  224.20
+         3 | Sofia Kozlova    | Mercedes-Benz V-Class | Minivan       |     220 | 260 | 3410.00 | 3410.00
+         4 | Anna Smirnova    | Skoda Octavia         | Comfort       |      43 |  31 |  580.50 |  580.50
+         5 | Nikita Lebedev   | Kia Rio               | Economy       |      42 |  26 |  415.80 |  415.80
+         6 | Egor Popov       | Volkswagen Polo       | Welcome Promo |      50 |  40 |  295.00 |  295.00
+         7 | Maxim Sokolov    | Kia Rio               | Economy       |      90 | 110 |  891.00 |  891.00
+         8 | Boris Ivanov     | Skoda Octavia         | Comfort       |      45 |  36 |  607.50 |  607.50
+         9 | Irina Volkova    | Hyundai Solaris       | Economy       |      25 |  18 |  247.50 |  247.50
+        11 | Pavel Novikov    | Kia Rio               | Welcome Promo |      42 |  31 |  247.80 |  247.80
+        12 | Daria Kuznetsova | Skoda Octavia         | Comfort       |      47 |  32 |  634.50 |  634.50
+        13 | Nikita Lebedev   | Toyota Camry          | Business      |      75 |  60 | 1875.00 | 1875.00
+        14 | Sofia Kozlova    | Volkswagen Polo       | Economy Plus  |      40 |  30 |  436.00 |       0
+(13 rows)
+
+SELECT
+    cu.full_name,
+    c.plate_number,
+    r.started_at
+FROM rental AS r
+JOIN customer AS cu ON r.customer_id = cu.customer_id
+JOIN car AS c ON r.car_id = c.car_id
+WHERE r.status = 'active'
+ORDER BY r.started_at;
+   full_name   | plate_number |       started_at       
+---------------+--------------+------------------------
+ Anna Smirnova | H808PC797    | 2026-09-27 09:40:00+03
+ Egor Popov    | K606MH799    | 2026-09-27 10:05:00+03
+(2 rows)
+
+SELECT
+    cu.full_name,
+    f.violation,
+    f.amount,
+    f.issued_on
+FROM fine AS f
+JOIN rental AS r ON f.rental_id = r.rental_id
+JOIN customer AS cu ON r.customer_id = cu.customer_id
+WHERE NOT f.is_paid
+ORDER BY f.fine_id;
+   full_name   |       violation       | amount  | issued_on  
+---------------+-----------------------+---------+------------
+ Maxim Sokolov | Speeding over 40 km/h | 2000.00 | 2026-09-02
+ Maxim Sokolov | Running a red light   | 1000.00 | 2026-09-02
+(2 rows)
+
+SELECT
+    t.name AS tariff,
+    count(DISTINCT r.rental_id) AS rentals,
+    coalesce(sum(p.amount), 0) AS revenue
+FROM tariff AS t
+LEFT JOIN rental AS r ON t.tariff_id = r.tariff_id
+LEFT JOIN payment AS p ON r.rental_id = p.rental_id
+GROUP BY t.name
+ORDER BY revenue DESC;
+    tariff     | rentals | revenue 
+---------------+---------+---------
+ Business      |       2 | 4455.00
+ Minivan       |       2 | 3410.00
+ Comfort       |       4 | 1822.50
+ Economy       |       3 | 1554.30
+ Welcome Promo |       4 |  767.00
+ Economy Plus  |       1 |       0
+(6 rows)
+
