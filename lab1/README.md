@@ -1,4 +1,4 @@
-# Lab 1. Relational Database Design
+# Lab 1. Relational Database Design: Car Sharing
 
 ## Task
 
