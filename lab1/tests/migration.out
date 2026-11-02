@@ -1,0 +1,46 @@
+\set VERBOSITY terse
+INSERT INTO rental_inspection (rental_id, kind, inspected_at, notes)
+VALUES
+(3, 'pre_rental', '2026-08-15 07:25+03', 'No damage'),
+(3, 'post_rental', '2026-08-15 11:15+03', 'Scratch on the rear bumper');
+INSERT 0 2
+INSERT INTO rental_incident (inspection_id, photo_url, notes)
+VALUES (2, 'https://example.com/inspections/2/bumper.jpg', 'Scratch 10 cm on the rear bumper');
+INSERT 0 1
+SELECT
+    i.rental_id,
+    i.kind,
+    count(d.incident_id) AS incidents
+FROM rental_inspection AS i
+LEFT JOIN rental_incident AS d ON i.inspection_id = d.inspection_id
+GROUP BY i.inspection_id, i.rental_id, i.kind
+ORDER BY i.inspection_id;
+ rental_id |    kind     | incidents 
+-----------+-------------+-----------
+         3 | pre_rental  |         0
+         3 | post_rental |         1
+(2 rows)
+
+INSERT INTO rental_inspection (rental_id, kind)
+VALUES (3, 'pre_rental');
+psql:migration.sql:20: ERROR:  duplicate key value violates unique constraint "rental_inspection_rental_kind_key"
+INSERT INTO rental_inspection (rental_id, kind)
+VALUES (3, 'midway');
+psql:migration.sql:23: ERROR:  new row for relation "rental_inspection" violates check constraint "rental_inspection_kind_check"
+INSERT INTO rental_inspection (rental_id, kind)
+VALUES (99, 'pre_rental');
+psql:migration.sql:26: ERROR:  insert or update on table "rental_inspection" violates foreign key constraint "rental_inspection_rental_fkey"
+INSERT INTO rental_incident (inspection_id, notes)
+VALUES (99, 'Dent');
+psql:migration.sql:29: ERROR:  insert or update on table "rental_incident" violates foreign key constraint "rental_incident_inspection_fkey"
+DELETE FROM rental
+WHERE rental_id = 3;
+DELETE 1
+SELECT
+    (SELECT count(*) FROM rental_inspection) AS inspections,
+    (SELECT count(*) FROM rental_incident) AS incidents;
+ inspections | incidents 
+-------------+-----------
+           0 |         0
+(1 row)
+

@@ -191,5 +191,24 @@ The exact PostgreSQL messages are stored in [tests/constraints.out](../tests/con
 
 ## Requirement change
 
-The additional requirement is issued after the base model is accepted. It will be implemented in
-`migration.sql` with `ALTER TABLE` on the populated database.
+Requirement: the car is inspected before the rental starts and after it ends. Each inspection
+records the damage found, its description and photos.
+
+[migration.sql](../migration.sql) adds two tables to the populated database in one transaction.
+Existing rows are not changed: earlier rentals simply have no inspections.
+
+| Table | Content | Key rules |
+| --- | --- | --- |
+| `rental_inspection` | inspection of one rental: kind, time, notes | `kind` is `pre_rental` or `post_rental`; `UNIQUE (rental_id, kind)` allows one inspection of each kind per rental |
+| `rental_incident` | damage found during an inspection: photo link and description | belongs to exactly one inspection |
+
+- A rental has at most two inspections, an inspection has zero or more incidents (1 : N).
+- Photos are stored as links to files, not as binary data in the database.
+- Both foreign keys use `ON DELETE CASCADE`: an inspection is part of its rental and an incident
+  is part of its inspection.
+- The model stays in 3NF: inspection attributes depend only on `inspection_id`, incident
+  attributes only on `incident_id`; the car and the customer are reached through the rental.
+
+[tests/migration.sql](../tests/migration.sql) inserts inspections and an incident, shows that a
+second inspection of the same kind, an unknown kind and references to missing rows are rejected,
+and that deleting a rental removes its inspections and incidents.

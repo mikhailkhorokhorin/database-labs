@@ -4,14 +4,16 @@
 
 Design a relational database for variant 13, car sharing, normalize it to 3NF,
 draw the ER diagram, implement it in PostgreSQL, fill it with test data and demonstrate that the
-integrity constraints reject invalid data. The design, the ER diagram and the 3NF justification
-are in [docs/report.md](docs/report.md).
+integrity constraints reject invalid data. Then change the populated database for an additional
+requirement without recreating it. The design, the ER diagram, the 3NF justification and the
+migration are described in [docs/report.md](docs/report.md).
 
 | File | Content |
 | --- | --- |
 | [schema.sql](schema.sql) | tables, keys and constraints |
 | [data.sql](data.sql) | test data |
 | [constraints_test.sql](constraints_test.sql) | invalid operations rejected by the constraints |
+| [migration.sql](migration.sql) | vehicle inspections before and after a rental |
 | [tests/](tests/) | checks run by `make test` with the expected psql output |
 
 ## Build and run
@@ -40,5 +42,4 @@ $ make run LAB=lab1
 
 ## Notes
 
-`migration.sql` is added once the requirement change is issued. `make run` and `make test` apply
-it automatically after `schema.sql` and `data.sql`.
+`make run` and `make test` apply `migration.sql` after `schema.sql` and `data.sql`.
